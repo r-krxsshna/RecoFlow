@@ -204,6 +204,7 @@ recoflow-mlops/
 │   │
 │   ├── ingestion/                # Data loading
 │   │   └── load_interactions.py
+|   |   └── ingest.py
 │   │
 │   ├── validation/               # Data quality & schema checks
 │   │   └── interaction_checks.py
@@ -247,6 +248,8 @@ recoflow-mlops/
 │
 ├── tests/
 │
+├── logs
+|     └── recoflow.log
 ├── .gitignore
 ├── requirements.txt
 └── README.md
