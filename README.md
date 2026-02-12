@@ -234,6 +234,7 @@ recoflow-mlops/
 ├── data/
 │   ├── raw/
 │   ├── processed/
+|   |       └── splits/
 │   └── monitoring/
 │
 ├── models/                       # Local model artifacts (optional)
