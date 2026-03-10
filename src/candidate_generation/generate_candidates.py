@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest import result
+from scipy.sparse import csr_matrix,issparse
 
 import joblib
 import pandas as pd
@@ -25,6 +25,9 @@ def generate_candidate_for_users(
 
     index_to_item = {v: k for k, v in item_map.items()}
 
+    if not issparse(train_interactions):
+        train_interactions = csr_matrix(train_interactions.values)
+
     candidates = []
 
     for user_id in user_ids:
@@ -34,9 +37,11 @@ def generate_candidate_for_users(
 
         uidx = user_map[user_id]
 
+        user_row = train_interactions[uidx]
+
         item_indices, scores = model.recommend(
-            user_id = uidx,
-            user_items = train_interactions.T,
+            userid = uidx,
+            user_items = user_row,
             N=k
         )
 
