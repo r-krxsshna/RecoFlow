@@ -1,340 +1,348 @@
 # RecoFlow
-RecoFlow is a production-oriented recommendation system that follows real-world industry architecture: candidate generation + ranking, wrapped with a complete MLOps lifecycle including training pipelines, experiment tracking, model registry, deployment, monitoring and automated retraining.
 
-This project is designed as a capstone to demonstrate how modern recommendation systems are built, deployed and maintained in real production environments.
+**RecoFlow** is a production-style recommendation system that follows real-world industry architecture: **candidate generation + ranking**, combined with an **end-to-end ML lifecycle** including data pipelines, model training pipelines, API serving, monitoring, and automated retraining.
 
-This project focuses on system design and lifecycle management, not only on building a machine learning model.
+This project is designed as a **capstone ML engineering project** demonstrating how modern recommendation systems are built, deployed, and maintained in production environments.
 
-Specifically, the goals are:
+The focus of the project is not only on machine learning models, but also on **system design, scalability, and ML lifecycle management (MLOps).**
 
- -> Build a two-stage recommendation system
+---
 
-  -> Stage 1: candidate generation
+# 🎯 Project Goals
 
-  -> Stage 2: ranking
+The main objectives of this project are:
 
--> Implement a reproducible and automated ML pipeline
+• Build a **two-stage recommendation system**
 
--> Track experiments and models using a model registry
+* Stage 1 → Candidate Generation
+* Stage 2 → Ranking
 
--> Expose recommendations through a production-ready API
+• Implement a **reproducible ML pipeline**
 
--> Monitor data and prediction drift
+• Train and manage **multiple models**
 
--> Enable automated retraining based on monitoring signals
+• Expose recommendations via a **production-ready API**
 
-🎯 Why this model is built (real-world motivation)
+• Implement **monitoring and drift detection**
 
-In real companies, recommendation systems are not built as a single model.
+• Enable **automated model retraining**
 
-They are built to solve three practical problems:
+---
 
-1. Scalability
-
-When the number of items is large, it is not possible to score all items for every user.
-
-Therefore, real systems first generate a small candidate set.
-
-This project implements:
-
--> a candidate generation model to retrieve a small subset of relevant items per user.
-
-2. Personalization quality
-
-A single collaborative filtering model is not enough to capture complex user behaviour.
-
-In practice, a separate ranking model is used to learn:
-
--> user behaviour patterns
-
--> item popularity signals
-
--> interaction statistics
-
--> model prediction scores
-
-This project uses a ranking model on top of generated candidates to improve final recommendation quality.
-
-3. Production reliability
-
-In real production systems:
-
--> models change
-
--> data changes
-
--> user behaviour changes
-
-Therefore, this project focuses on:
-
--> experiment tracking
-
--> versioned models
-
--> monitoring
-
--> retraining pipelines
-
-rather than only offline accuracy.
-
-🧠 High-Level Architecture
+# 🧠 High-Level Architecture
 
 User interaction data
-        ↓
+↓
 Data ingestion & validation
-        ↓
+↓
+Data splitting (temporal user split)
+↓
 Candidate generation model
-        ↓
-Candidate set per user
-        ↓
-Feature generation for ranking
-        ↓
+↓
+Candidate items per user
+↓
+Ranking feature generation
+↓
 Ranking model
-        ↓
+↓
 Top-K recommendations
-        ↓
+↓
 FastAPI serving layer
-        ↓
-Prediction & input logging
-        ↓
+↓
+Recommendation API
+↓
 Monitoring & drift detection
-        ↓
-Automated retraining pipeline
+↓
+Automated retraining pipelines
 
+---
 
-🧩 System Design (Two-Stage Recommendation)
-Stage 1 – Candidate Generation
+# 🧩 Two-Stage Recommendation Architecture
 
-Purpose:
+Modern recommendation systems use a **two-stage architecture** to handle large-scale item catalogs efficiently.
 
--> Retrieve a small set of potentially relevant items for a user.
+## Stage 1 – Candidate Generation
 
-Model:
+### Purpose
 
--> Collaborative filtering using matrix factorization.
+Retrieve a **small subset of potentially relevant items** for each user from a large catalog.
 
-Output:
+### Model
 
--> Top-N candidate items per user.
+Collaborative filtering using **matrix factorization (ALS-style approach)**.
 
-Stage 2 – Ranking
+### Output
 
-Purpose:
+Top-N candidate items per user.
 
--> Rank the candidate items using richer behavioural and statistical features.
+This stage improves **scalability**, because it avoids scoring every item for every user.
 
-Model:
+---
 
--> Supervised learning model (e.g. Gradient Boosting / Logistic Regression).
+## Stage 2 – Ranking
 
-Input features include:
+### Purpose
 
--> user activity statistics
+Rank candidate items using **additional behavioral and statistical features**.
 
--> item popularity statistics
+### Model
 
--> collaborative filtering prediction score
+Supervised machine learning model trained on candidate features.
 
--> recency signals
+### Example Features
 
-Output:
+• User interaction statistics
+• Item popularity signals
+• Candidate model prediction score
+• User activity features
 
--> Final ranked Top-K recommendations.
+### Output
 
-🔁 MLOps Lifecycle
+Final **Top-K ranked recommendations** for each user.
 
-RecoFlow implements a complete ML lifecycle:
+---
 
--> Data ingestion and preprocessing
+# ⚙️ ML Pipeline Architecture
 
--> Training pipelines for:
+RecoFlow includes multiple **training and data pipelines** to simulate a production ML workflow.
 
--> candidate generation model
+## Candidate Training Pipeline
 
--> ranking model
+Responsible for:
 
--> Experiment tracking with MLflow
+• Data ingestion
+• Data validation
+• Temporal data splitting
+• Training the candidate generation model
 
--> Model registry and versioning
+Pipeline file:
 
--> Automated model promotion
+```
+pipelines/train_candidate_pipeline.py
+```
 
--> API-based inference service
+Outputs:
 
--> Monitoring with drift and data quality reports
+• Candidate model
+• User mappings
+• Item mappings
 
--> Retraining triggered by monitoring signals
+---
 
-🛠️ Technology Stack
+## Ranking Training Pipeline
 
--> Python
+Responsible for:
 
--> pandas, numpy
+• Generating candidate items
+• Building ranking features
+• Training the ranking model
 
--> scikit-surprise (candidate model)
+Pipeline file:
 
--> scikit-learn / LightGBM (ranking model)
+```
+pipelines/train_ranker_pipeline.py
+```
 
--> MLflow (experiment tracking & registry)
+Outputs:
 
--> FastAPI (serving layer)
+• Ranking model used during recommendation
 
--> Evidently (monitoring & drift detection)
+---
 
--> Docker
+# 🌐 API Serving Layer
 
--> GitHub Actions (CI – optional)
+RecoFlow exposes recommendations through a **FastAPI service**.
 
-📂 Project Structure
+The API loads trained models and generates recommendations in real time.
 
-recoflow-mlops/
+Example endpoint:
+
+```
+GET /recommend/{user_id}
+```
+
+Example response:
+
+```
+{
+  "user_id": 10,
+  "recommendations": [823, 896, 73, 488, 388]
+}
+```
+
+The serving layer uses:
+
+• Candidate generation model
+• Ranking model
+• Feature builder
+
+to compute final recommendations.
+
+---
+
+# 📊 Monitoring
+
+The system includes **data drift monitoring** to detect changes in interaction patterns.
+
+Monitoring compares:
+
+• Training data statistics
+• New production data statistics
+
+Example monitored metrics:
+
+• Number of interactions
+• Number of users
+• Number of items
+• Average interactions per user
+
+If the change exceeds a defined threshold, **drift is detected**.
+
+Monitoring code:
+
+```
+src/monitoring/drift.py
+```
+
+---
+
+# 🔄 Automated Retraining
+
+When drift is detected, the system automatically triggers **model retraining pipelines**.
+
+Retraining workflow:
+
+Drift detection
+↓
+Candidate model retraining
+↓
+Ranking model retraining
+↓
+New models saved for serving
+
+Retraining pipeline:
+
+```
+pipelines/retraining_pipeline.py
+```
+
+---
+
+# 🛠 Technology Stack
+
+Python
+
+Core libraries:
+
+• pandas
+• numpy
+
+Machine learning:
+
+• scikit-learn
+
+API serving:
+
+• FastAPI
+• Uvicorn
+
+MLOps components:
+
+• Logging system
+• Modular pipelines
+• Drift monitoring
+• Automated retraining
+
+---
+
+# 📊 Evaluation Strategy
+
+The project evaluates different parts of the system separately.
+
+## Candidate Model
+
+Evaluated using:
+
+• Interaction prediction performance
+
+## Final Recommendation Quality
+
+Evaluated using ranking metrics such as:
+
+• Precision@K
+• Recall@K
+• NDCG@K
+
+These metrics reflect **real recommendation system evaluation**.
+
+---
+
+# 🧪 Dataset
+
+The system uses the **MovieLens dataset** as a user–item interaction dataset.
+
+This dataset simulates real-world recommendation scenarios with:
+
+• users
+• items (movies)
+• interaction history
+
+---
+
+# 📂 Project Structure
+
+```
+RecoFlow
 │
-├── api/                          # Inference service
-│   └── main.py
+├── data
+│   ├── raw
+│   └── processed
 │
-├── pipelines/                    # Orchestration entry points
+├── models
+│
+├── pipelines
 │   ├── train_candidate_pipeline.py
 │   ├── train_ranker_pipeline.py
-│   └── monitoring_pipeline.py
+│   ├── drift_monitoring_pipeline.py
+│   └── retraining_pipeline.py
 │
-├── src/
-│   │
-│   ├── config/                   # Centralised configs
-│   │   └── settings.py
-│   │
-│   ├── ingestion/                # Data loading
-│   │   └── load_interactions.py
-|   |   └── ingest.py
-│   │
-│   ├── validation/               # Data quality & schema checks
-│   │   └── interaction_checks.py
-│   │
-│   ├── splitting/                # Train/val/test splitting logic
-│   │   └── user_split.py
-│   │
-│   ├── candidate_generation/     # Stage-1 models
-│   │   ├── train_cf.py
-│   │   └── generate_candidates.py
-│   │
-│   ├── ranking/                  # Stage-2 models
-│   │   ├── feature_builder.py
-│   │   ├── train_ranker.py
-│   │   └── evaluate_ranker.py
-│   │
-│   ├── serving/                  # Core inference logic (not HTTP)
-│   │   └── recommender.py
-│   │
-│   ├── monitoring/               # Drift, data quality, reports
-│   │   └── drift.py
-│   │
-│   └── common/                   # Shared utilities
-│       ├── logging.py
-│       └── io.py
+├── src
+│   ├── ingestion
+│   ├── splitting
+│   ├── candidate_generation
+│   ├── ranking
+│   ├── serving
+│   ├── monitoring
+│   └── common
 │
-├── data/
-│   ├── raw/
-│   ├── processed/
-|   |       └── splits/
-│   └── monitoring/
-│
-├── models/                       # Local model artifacts (optional)
-│
-├── notebooks/                    # Exploration only
-│
-├── docker/
-│   ├── api.Dockerfile
-│   └── training.Dockerfile
-│
-├── scripts/                      # One-off utility scripts
-│
-├── tests/
-│
-├── logs
-|     └── recoflow.log
-├── .gitignore
-├── requirements.txt
-└── README.md
+└── main.py
+```
 
+---
 
-📊 Evaluation Strategy
+# 👨‍💻 Author
 
-The project uses two types of evaluation:
+**Ridhul Krishna P**
 
-Candidate model
+This project was built as a **capstone ML engineering project** focusing on:
 
--> RMSE (for collaborative filtering quality)
+• recommendation system architecture
+• scalable ML system design
+• MLOps pipelines
+• model serving and monitoring
 
-Final recommendation quality
+---
 
--> Precision@K
+# ⭐ Summary
 
--> Recall@K
+RecoFlow is not just a recommender model.
 
--> NDCG@K
+It is a **complete recommendation system platform** demonstrating:
 
-This reflects real-world ranking-based evaluation instead of only regression metrics.
+• real-world system architecture
+• two-stage recommendation design
+• ML engineering workflows
+• API serving
+• monitoring and retraining pipelines
 
-🌐 API Endpoints
-
-The serving layer exposes:
-
--> POST /recommend
-
--> POST /recommend/batch
-
--> POST /feedback
-
--> GET /model/info
-
-The API loads the currently promoted models from the model registry.
-
-📈 Monitoring
-
-The system monitors:
-
--> input feature distributions
-
--> user activity distributions
-
--> prediction distributions
-
--> data drift between training and production data
-
-Drift and quality reports are generated automatically.
-
-🔄 Automated Retraining
-
-When drift or performance degradation is detected:
-
--> training pipelines are triggered
-
--> new models are trained and evaluated
-
--> the best model is registered and promoted automatically
-
-🧪 Dataset
-
-The initial implementation uses the MovieLens dataset as interaction data.
-
-The dataset is treated as a generic user–item interaction dataset to simulate real-world recommendation scenarios.
-
-🧑‍💻 Author
-
-Ridhul Krishna P
-Capstone project focused on real-world recommendation systems and MLOps engineering.
-
-⭐ Summary
-
-RecoFlow is not a demo recommender.
-
-It is a complete, production-style recommendation platform designed to demonstrate:
-
--> real system architecture
-
--> ML engineering practices
-
--> MLOps workflows
-
--> deployment and monitoring strategies
-
-in a single end-to-end project.
+The goal of this project is to showcase how **modern recommendation systems are built and maintained in production environments**.
